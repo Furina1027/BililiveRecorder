@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,8 +17,22 @@ namespace BililiveRecorder.Core.Recording
         /// <summary>
         /// 会被视为"录制视频"而可以被删除的文件扩展名。
         /// 弹幕、封面等文件不会被删除，但会计入文件夹总大小。
+        /// TODO: 上游若新增 HLS/fMP4 等产出非 .flv 的录制模式（.m4s/.mp4），
+        /// 此列表需要同步扩展，否则容量限制会静默失效。
         /// </summary>
         private static readonly string[] VideoFileExtensions = new[] { ".flv" };
+
+        /// <summary>
+        /// 相同文件夹两次检查之间的最小间隔。每次新建录制文件都会触发检查，
+        /// 而检查是完整目录遍历 + 全量 stat——本地 NVMe 无感，但 NAS/机械盘上
+        /// 会拖慢录制管线的建文件路径，且多房间高频触发完全没必要。
+        /// </summary>
+        private static readonly TimeSpan MinCheckInterval = TimeSpan.FromMinutes(5);
+
+        /// <summary>
+        /// 每个文件夹上次检查的时间（UTC ticks），用于节流。
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, long> LastCheckTicks = new();
 
         /// <summary>
         /// 检查文件夹总大小，超出限制时删除最早的录制视频文件。
@@ -25,13 +40,25 @@ namespace BililiveRecorder.Core.Recording
         /// <param name="folder">要检查的文件夹</param>
         /// <param name="maxBytes">大小上限（字节）</param>
         /// <param name="logger">日志</param>
+        /// <param name="searchOption">是否递归子目录。扁平模板下 folder 是整个
+        /// 工作目录，调用方应传 TopDirectoryOnly 以免波及其他主播的文件</param>
         /// <returns>实际删除的文件数量</returns>
-        public static int EnforceLimit(string folder, long maxBytes, ILogger logger)
+        public static int EnforceLimit(string folder, long maxBytes, ILogger logger,
+            SearchOption searchOption = SearchOption.AllDirectories)
         {
             if (string.IsNullOrEmpty(folder) || maxBytes <= 0 || !Directory.Exists(folder))
                 return 0;
 
-            var files = EnumerateFilesSafe(folder, logger).ToList();
+            // 节流：同文件夹在最小间隔内的重复检查直接跳过。多线程同时触发时
+            // 偶尔多跑一次无害，不追求精确的 CAS 语义。
+            var key = Path.GetFullPath(folder)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var now = DateTime.UtcNow.Ticks;
+            if (LastCheckTicks.TryGetValue(key, out var last) && now - last < MinCheckInterval.Ticks)
+                return 0;
+            LastCheckTicks[key] = now;
+
+            var files = CollectFiles(folder, logger, searchOption);
             if (files.Count == 0)
                 return 0;
 
@@ -92,37 +119,45 @@ namespace BililiveRecorder.Core.Recording
             return deletedCount;
         }
 
-        private static IEnumerable<FileInfo> EnumerateFilesSafe(string folder, ILogger logger)
+        /// <summary>
+        /// 手动按目录递归收集文件。不用 <see cref="Directory.EnumerateFiles(string,string,SearchOption)"/>：
+        /// 它的迭代器抛过一次异常就进入 faulted 终态，后续内容会被静默跳过，
+        /// 导致大小统计少算。这里逐目录 catch，跳过出问题的部分并留下 Warning。
+        /// </summary>
+        private static List<FileInfo> CollectFiles(string folder, ILogger logger, SearchOption searchOption)
         {
-            var enumerator = default(IEnumerator<FileInfo>);
-            try
+            var result = new List<FileInfo>();
+            var pendingDirs = new Stack<string>();
+            pendingDirs.Push(folder);
+
+            while (pendingDirs.Count > 0)
             {
-                enumerator = new DirectoryInfo(folder)
-                    .EnumerateFiles("*", SearchOption.AllDirectories)
-                    .GetEnumerator();
+                var dir = pendingDirs.Pop();
 
-                while (true)
+                try
                 {
-                    FileInfo current;
-                    try
-                    {
-                        if (!enumerator.MoveNext())
-                            break;
-                        current = enumerator.Current;
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Debug(ex, "枚举录制文件夹 {Folder} 中的文件时出错，跳过无法访问的部分", folder);
-                        continue;
-                    }
+                    result.AddRange(new DirectoryInfo(dir).EnumerateFiles());
+                }
+                catch (Exception ex)
+                {
+                    logger.Warning(ex, "枚举录制文件夹 {Dir} 中的文件失败，该部分不计入大小统计", dir);
+                }
 
-                    yield return current;
+                if (searchOption != SearchOption.AllDirectories)
+                    continue;
+
+                try
+                {
+                    foreach (var sub in Directory.EnumerateDirectories(dir))
+                        pendingDirs.Push(sub);
+                }
+                catch (Exception ex)
+                {
+                    logger.Warning(ex, "枚举录制文件夹 {Dir} 的子目录失败，子目录内容不计入大小统计", dir);
                 }
             }
-            finally
-            {
-                (enumerator as IDisposable)?.Dispose();
-            }
+
+            return result;
         }
 
         private static bool IsVideoFile(FileInfo file) =>

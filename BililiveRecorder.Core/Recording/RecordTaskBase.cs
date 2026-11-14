@@ -238,10 +238,17 @@ namespace BililiveRecorder.Core.Recording
                     ? Path.Combine(workDirectory, relativePath.Substring(0, separatorIndex))
                     : workDirectory;
 
+                // 文件名模板扁平（无子目录）时只扫工作目录顶层：roomFolder 此时语义上
+                // 是整个工作目录，递归会波及使用子目录模板的其他主播的录制文件
+                var searchOption = separatorIndex > 0
+                    ? SearchOption.AllDirectories
+                    : SearchOption.TopDirectoryOnly;
+
                 var deleted = FolderSizeLimiter.EnforceLimit(
                     roomFolder,
                     (long)limit * 1024 * 1024,
-                    this.logger);
+                    this.logger,
+                    searchOption);
 
                 if (deleted > 0)
                     this.logger.Information("为控制录制文件夹大小，共删除了 {Count} 个旧录制文件", deleted);
