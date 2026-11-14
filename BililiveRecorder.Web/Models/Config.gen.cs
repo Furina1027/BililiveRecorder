@@ -56,6 +56,7 @@ namespace BililiveRecorder.Web.Models
         public Optional<CuttingMode>? OptionalCuttingMode { get; set; }
         public Optional<uint>? OptionalCuttingNumber { get; set; }
         public Optional<bool>? OptionalCuttingByTitle { get; set; }
+        public Optional<uint>? OptionalRecordFolderSizeLimit { get; set; }
         public Optional<bool>? OptionalRecordDanmaku { get; set; }
         public Optional<bool>? OptionalRecordDanmakuRaw { get; set; }
         public Optional<bool>? OptionalRecordDanmakuSuperChat { get; set; }
