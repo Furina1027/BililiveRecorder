@@ -17,6 +17,7 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <!-- WindowsAPICodePack 1.1.x 只声明了 netfx 目标，实际是纯 Win32 封装，net10 可用 -->
+    <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
     <NoWarn>$(NoWarn);NU1701</NoWarn>
   </PropertyGroup>
   <ItemGroup>
