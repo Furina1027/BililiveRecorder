@@ -1,6 +1,5 @@
 mode: Mainline
 branches:
-  dev:
+  main:
     mode: Mainline
-    tag: ''
     increment: Patch
