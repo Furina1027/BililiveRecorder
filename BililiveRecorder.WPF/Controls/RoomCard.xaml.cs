@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -58,7 +58,7 @@ namespace BililiveRecorder.WPF.Controls
             {
                 try
                 {
-                    Process.Start("https://live.bilibili.com/" + r.RoomConfig.RoomId);
+                    Process.Start(new ProcessStartInfo("https://live.bilibili.com/" + r.RoomConfig.RoomId) { UseShellExecute = true });
                 }
                 catch (Exception) { }
             }

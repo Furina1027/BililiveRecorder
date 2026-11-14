@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
@@ -14,7 +14,7 @@ namespace BililiveRecorder.WPF.Models
 
         public static Commands OpenLink { get; } = new Commands
         {
-            ExecuteDelegate = o => { try { Process.Start(o.ToString()); } catch (Exception) { } }
+            ExecuteDelegate = o => { try { Process.Start(new ProcessStartInfo(o.ToString()) { UseShellExecute = true }); } catch (Exception) { } }
         };
 
         public static Commands OpenContentDialog { get; } = new Commands
