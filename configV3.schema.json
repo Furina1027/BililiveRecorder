@@ -467,8 +467,8 @@
           }
         },
         "RecordFolderSizeLimit": {
-          "description": "录制文件夹大小上限 单位MB 超出后自动删除最早的录制文件，0为不限制\n默认: 0",
-          "markdownDescription": "录制文件夹大小上限 单位MB 超出后自动删除最早的录制文件，0为不限制  \n默认: `0 `\n\n",
+          "description": "录制文件夹大小上限 单位MiB 超出后自动删除最早的录制文件，0为不限制\n默认: 0",
+          "markdownDescription": "录制文件夹大小上限 单位MiB 超出后自动删除最早的录制文件，0为不限制  \n默认: `0 `\n\n",
           "type": "object",
           "additionalProperties": false,
           "properties": {
@@ -762,8 +762,8 @@
           }
         },
         "RecordFolderSizeLimit": {
-          "description": "录制文件夹大小上限 单位MB 超出后自动删除最早的录制文件，0为不限制\n默认: 0",
-          "markdownDescription": "录制文件夹大小上限 单位MB 超出后自动删除最早的录制文件，0为不限制  \n默认: `0 `\n\n",
+          "description": "录制文件夹大小上限 单位MiB 超出后自动删除最早的录制文件，0为不限制\n默认: 0",
+          "markdownDescription": "录制文件夹大小上限 单位MiB 超出后自动删除最早的录制文件，0为不限制  \n默认: `0 `\n\n",
           "type": "object",
           "additionalProperties": false,
           "properties": {
