@@ -24,7 +24,7 @@ namespace BililiveRecorder.WPF
         {
             this.SoftwareVersion = GitVersionInformation.FullSemVer;
 
-            Pages.AnnouncementPage.CultureInfo = CultureInfo.CurrentUICulture;
+            // 只保留简体中文（中性 Strings.resx），任意系统语言都会回退到它
             LocalizeDictionary.Instance.Culture = CultureInfo.CurrentUICulture;
 #if DEBUG
             LocalizeDictionary.Instance.OutputMissingKeys = true;

@@ -54,7 +54,6 @@ namespace BililiveRecorder.WPF.Pages
             AddType(typeof(LogPage));
             AddType(typeof(AboutPage));
             AddType(typeof(AdvancedSettingsPage));
-            AddType(typeof(AnnouncementPage));
             AddType(typeof(ToolboxAutoFixPage));
             AddType(typeof(ToolboxRemuxPage));
             AddType(typeof(ToolboxDanmakuMergerPage));
@@ -64,15 +63,6 @@ namespace BililiveRecorder.WPF.Pages
 
             this.InitializeComponent();
             this.AdvancedSettingsPageItem.Visibility = Visibility.Hidden;
-
-            try
-            {
-                new System.Globalization.CultureInfo("en-PN");
-            }
-            catch (Exception)
-            {
-                this.JokeLangSelectionMenuItem.Visibility = System.Windows.Visibility.Collapsed;
-            }
 
 #if DEBUG
             this.DebugBuildIcon.Visibility = Visibility.Visible;

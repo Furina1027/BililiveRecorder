@@ -26,24 +26,6 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <TextBlock Text="{l:Loc WorkDirectorySelector_Title}" TextAlignment="Center" FontSize="26" Width="300"/>
-        <Menu VerticalAlignment="Center" HorizontalAlignment="Right">
-            <MenuItem>
-                <MenuItem.Header>
-                    <ui:PathIcon Width="20" Height="20" Style="{StaticResource PathIconDataTranslate}"/>
-                </MenuItem.Header>
-                <MenuItem Header="简体中文" CommandParameter="" Command="{Binding Source={x:Static l:LocalizeDictionary.Instance}, Path=SetCultureCommand}"/>
-                <MenuItem Header="繁體中文" CommandParameter="zh-Hant" Command="{Binding Source={x:Static l:LocalizeDictionary.Instance}, Path=SetCultureCommand}"/>
-                <MenuItem Header="日本語" CommandParameter="ja" Command="{Binding Source={x:Static l:LocalizeDictionary.Instance}, Path=SetCultureCommand}"/>
-                <MenuItem Header="English" CommandParameter="en" Command="{Binding Source={x:Static l:LocalizeDictionary.Instance}, Path=SetCultureCommand}"/>
-                <MenuItem Header="喵ニャーMeow🐱🐈" x:Name="JokeLangSelectionMenuItem" CommandParameter="en-PN" Command="{Binding Source={x:Static l:LocalizeDictionary.Instance}, Path=SetCultureCommand}"/>
-                <Separator/>
-                <MenuItem Header="参与翻译" Command="{x:Static m:Commands.OpenLink}" CommandParameter="https://rec.danmuji.org/link/translate/">
-                    <MenuItem.Icon>
-                        <ui:PathIcon Style="{StaticResource PathIconDataOpenInNew}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-            </MenuItem>
-        </Menu>
         <TextBlock Grid.Row="1" Text="{l:Loc {Binding Error,StringFormat=WorkDirectorySelector_Error_{0}}}" Margin="0,5" TextAlignment="Center" FontSize="16" Foreground="#FFFF2828"/>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>

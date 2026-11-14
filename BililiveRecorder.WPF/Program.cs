@@ -34,8 +34,6 @@ namespace BililiveRecorder.WPF
         internal static readonly LoggingLevelSwitch levelSwitchGlobal;
         internal static readonly LoggingLevelSwitch levelSwitchConsole;
         internal static readonly Logger logger;
-        internal static readonly Update update;
-        internal static Task? updateTask;
 
 #if DEBUG
         internal static readonly bool DebugMode = System.Diagnostics.Debugger.IsAttached;
@@ -81,7 +79,6 @@ namespace BililiveRecorder.WPF
                 }
             });
             ServicePointManager.Expect100Continue = false;
-            update = new Update(logger);
         }
 
         [STAThread]
@@ -199,8 +196,6 @@ namespace BililiveRecorder.WPF
 
             internal static int RunWpfReal()
             {
-                var cancel = new CancellationTokenSource();
-                var token = cancel.Token;
                 try
                 {
                     SleepBlocker.Start();
@@ -209,26 +204,11 @@ namespace BililiveRecorder.WPF
                     app.InitializeComponent();
                     app.DispatcherUnhandledException += App_DispatcherUnhandledException;
 
-                    updateTask = Task.Run(async () =>
-                    {
-                        while (!token.IsCancellationRequested)
-                        {
-                            await update.UpdateAsync().ConfigureAwait(false);
-                            await Task.Delay(TimeSpan.FromDays(1), token).ConfigureAwait(false);
-                        }
-                    });
-
                     return app.Run();
                 }
                 finally
                 {
-                    cancel.Cancel();
-
                     StreamStartedNotification.Cleanup();
-
-#pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
-                    update.WaitForUpdatesOnShutdownAsync().GetAwaiter().GetResult();
-#pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
                 }
             }
         }

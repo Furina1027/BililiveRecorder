@@ -95,11 +95,7 @@ namespace BililiveRecorder.Core.Api.Danmaku
         public string ReadString()
         {
             var bytes = this.ReadBytes();
-#if NETCOREAPP2_1_OR_GREATER
             return bytes.IsEmpty ? string.Empty : Encoding.UTF8.GetString(bytes);
-#else
-            return bytes.IsEmpty ? string.Empty : Encoding.UTF8.GetString(bytes.ToArray());
-#endif
         }
 
         public void SkipField(ProtobufWireType wireType)
