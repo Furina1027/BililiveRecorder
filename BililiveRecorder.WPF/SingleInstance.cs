@@ -29,7 +29,19 @@ namespace BililiveRecorder.WPF
             var identifier = "BililiveRecorder:SingeInstance:" + b64path;
             var pipeName = "BililiveRecorder_SI_" + b64path;
 
-            singleInstanceMutex = new Mutex(true, identifier, out var createdNew);
+            var createdNew = false;
+            try
+            {
+                singleInstanceMutex = new Mutex(true, identifier, out createdNew);
+            }
+            catch (AbandonedMutexException)
+            {
+                // 上一个实例崩溃退出时没释放互斥体：此时所有权已转移给本进程，
+                // 但构造函数抛出导致字段未赋值，重新打开一个句柄按新建处理
+                createdNew = true;
+                singleInstanceMutex = new Mutex(false, identifier);
+            }
+
             if (createdNew)
             {
                 serverCts = new CancellationTokenSource();

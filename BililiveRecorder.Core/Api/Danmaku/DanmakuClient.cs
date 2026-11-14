@@ -101,17 +101,29 @@ namespace BililiveRecorder.Core.Api.Danmaku
 
                 this.danmakuTransport = transport;
 
-                await this.SendHelloAsync(roomId, this.apiClient.GetUid(), this.apiClient.GetBuvid3(), danmakuServerInfo.Token ?? string.Empty).ConfigureAwait(false);
-                await this.SendPingAsync().ConfigureAwait(false);
-
-                if (cancellationToken.IsCancellationRequested)
+                try
                 {
+                    await this.SendHelloAsync(roomId, this.apiClient.GetUid(), this.apiClient.GetBuvid3(), danmakuServerInfo.Token ?? string.Empty).ConfigureAwait(false);
+                    await this.SendPingAsync().ConfigureAwait(false);
+
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        this.danmakuTransport.Dispose();
+                        this.danmakuTransport = null;
+                        return;
+                    }
+
+                    this.timer.Start();
+                }
+                catch
+                {
+                    // 握手失败时必须释放并清空 transport，否则字段残留会让后续
+                    // ConnectAsync 在开头的判空处直接返回，reader 循环又没有启动，
+                    // 房间弹幕会永久卡在“已连接”的假状态
                     this.danmakuTransport.Dispose();
                     this.danmakuTransport = null;
-                    return;
+                    throw;
                 }
-
-                this.timer.Start();
 
                 _ = Task.Run(async () =>
                 {

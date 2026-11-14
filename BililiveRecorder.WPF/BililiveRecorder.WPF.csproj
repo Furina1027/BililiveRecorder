@@ -32,6 +32,8 @@
   <ItemGroup>
     <!-- 托盘图标等以 pack URI (pack://application:,,,/ico.ico) 加载，必须作为 Resource 打进程序集 -->
     <Resource Include="ico.ico" />
+    <!-- 工具箱重封装用的 ffmpeg（ToolboxRemuxPage），旧式 csproj 带 CopyToOutputDirectory，SDK 风格需显式保留 -->
+    <None Update="lib\miniffmpeg" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

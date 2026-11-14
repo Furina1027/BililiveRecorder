@@ -237,6 +237,27 @@ namespace BililiveRecorder.Web
                         RequestPath = "/file",
                         RedirectToAppendTrailingSlash = true,
                     };
+
+                    // 录制工作目录里除录像/弹幕文件外还有 config.json（包含 Cookie 和 webhook 地址）、
+                    // config.backup.json、logs/ 日志等敏感内容，不能通过文件浏览器下载
+                    app.Use(async (context, next) =>
+                    {
+                        var requestPath = context.Request.Path;
+                        if (requestPath.StartsWithSegments("/file"))
+                        {
+                            var relative = Uri.UnescapeDataString(requestPath.Value!.Substring("/file".Length)).TrimStart('/');
+                            if (relative.Equals("config.json", StringComparison.OrdinalIgnoreCase)
+                                || relative.Equals("config.backup.json", StringComparison.OrdinalIgnoreCase)
+                                || relative.StartsWith("logs/", StringComparison.OrdinalIgnoreCase))
+                            {
+                                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                                return;
+                            }
+                        }
+
+                        await next(context);
+                    });
+
                     app
                         .UseStaticFiles(new StaticFileOptions(sharedRecordingFiles)
                         {

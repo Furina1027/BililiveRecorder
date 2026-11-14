@@ -244,14 +244,12 @@ namespace BililiveRecorder.Core.Recording
                     ? SearchOption.AllDirectories
                     : SearchOption.TopDirectoryOnly;
 
-                var deleted = FolderSizeLimiter.EnforceLimit(
+                // 检查在后台执行，不阻塞建文件路径；删除动作与汇总日志由 FolderSizeLimiter 自己输出
+                FolderSizeLimiter.EnforceLimit(
                     roomFolder,
                     (long)limit * 1024 * 1024,
                     this.logger,
                     searchOption);
-
-                if (deleted > 0)
-                    this.logger.Information("为控制录制文件夹大小，共删除了 {Count} 个旧录制文件", deleted);
             }
             catch (Exception ex)
             {
@@ -415,11 +413,15 @@ namespace BililiveRecorder.Core.Recording
             return (fullUrl, new StreamCodecQn { Codec = selectedCodecQn.Codec, Qn = item.CurrentQn });
         }
 
+        private const int MaxRedirectCount = 5;
+
         protected async Task<Stream> GetStreamAsync(string fullUrl, int timeout)
         {
             var client = this.CreateHttpClient();
 
             var streamHostInfoBuilder = new StringBuilder();
+
+            var redirectCount = 0;
 
             while (true)
             {
@@ -482,6 +484,11 @@ namespace BililiveRecorder.Core.Recording
                         _ => false
                     }).ToArray();
 
+                    // 必须在取下标之前检查，否则 DNS 没有返回符合要求的 IP 时
+                    // 会在 filtered[0] 处抛出 IndexOutOfRangeException
+                    if (filtered.Length == 0)
+                        throw new Exception("DNS 没有返回符合要求的 IP 地址");
+
                     var selected = filtered[this.random.Next(filtered.Length)];
 
                     this.logger.Debug("指定直播服务器地址 {DnsHost}: {SelectedIp}, Allowed: {AllowedAddressFamily}, {IPAddresses}", originalUri.DnsSafeHost, selected, allowedAddressFamily, ips);
@@ -490,11 +497,6 @@ namespace BililiveRecorder.Core.Recording
                     streamHostInfoBuilder.Append(" [");
                     streamHostInfoBuilder.Append(selected);
                     streamHostInfoBuilder.Append(']');
-
-                    if (selected is null)
-                    {
-                        throw new Exception("DNS 没有返回符合要求的 IP 地址");
-                    }
 
                     var builder = new UriBuilder(originalUri)
                     {
@@ -524,8 +526,16 @@ namespace BililiveRecorder.Core.Recording
                     case HttpStatusCode.Moved:
                     case HttpStatusCode.Redirect:
                         {
-                            fullUrl = new Uri(originalUri, resp.Headers.Location!).ToString();
-                            this.logger.Debug("跳转到 {Url}, 原文本 {Location}", fullUrl, resp.Headers.Location!.OriginalString);
+                            var location = resp.Headers.Location;
+                            if (location is null)
+                                throw new Exception("服务器返回了重定向响应但没有 Location 头");
+
+                            // 上限保护：异常的服务器可能一直 30x，无限循环会占住录制启动流程
+                            if (++redirectCount > MaxRedirectCount)
+                                throw new Exception("重定向次数超过上限 " + MaxRedirectCount + "，直播流地址可能配置有误");
+
+                            fullUrl = new Uri(originalUri, location).ToString();
+                            this.logger.Debug("跳转到 {Url}, 原文本 {Location}", fullUrl, location.OriginalString);
                             resp.Dispose();
                             streamHostInfoBuilder.Append('\n');
                             break;

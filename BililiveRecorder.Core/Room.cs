@@ -304,12 +304,18 @@ namespace BililiveRecorder.Core
                         if (!skipFetchRoomInfo)
                             await this.FetchRoomInfoAsync();
 
-                        await this.recordTask.StartAsync();
+                        // 使用锁内捕获的 task 局部变量，而不是 this.recordTask：
+                        // 任务启动后若立刻结束，RecordTask_RecordSessionEnded 会在锁内把它置 null，
+                        // 这里的 this.recordTask 解引用存在 NRE 竞态，也可能读到被重试逻辑创建的新任务
+                        await task.StartAsync();
                     }
                     catch (NoMatchingQnValueException)
                     {
-                        this.recordTask = null;
-                        this.OnPropertyChanged(nameof(this.Recording));
+                        if (this.recordTask == task)
+                        {
+                            this.recordTask = null;
+                            this.OnPropertyChanged(nameof(this.Recording));
+                        }
 
                         // 无匹配的画质，重试录制之前等待更长时间
                         _ = Task.Run(() => this.RestartAfterRecordTaskFailedAsync(RestartRecordingReason.NoMatchingQnValue));
@@ -320,8 +326,11 @@ namespace BililiveRecorder.Core
                     {
                         this.logger.Write(ex is ExecutionRejectedException ? LogEventLevel.Verbose : LogEventLevel.Warning, ex, "启动录制出错");
 
-                        this.recordTask = null;
-                        this.OnPropertyChanged(nameof(this.Recording));
+                        if (this.recordTask == task)
+                        {
+                            this.recordTask = null;
+                            this.OnPropertyChanged(nameof(this.Recording));
+                        }
 
                         if (ex is IOException ioex && (ioex.HResult == HR_ERROR_DISK_FULL || ioex.HResult == HR_ERROR_HANDLE_DISK_FULL))
                         {
@@ -344,9 +353,9 @@ namespace BililiveRecorder.Core
 
                     RecordSessionStarted?.Invoke(this, new RecordSessionStartedEventArgs(this)
                     {
-                        SessionId = this.recordTask.SessionId,
-                        Qn = this.recordTask.Qn,
-                        QnDescription = StreamQualityNumber.MapToString(this.recordTask.Qn),
+                        SessionId = task.SessionId,
+                        Qn = task.Qn,
+                        QnDescription = StreamQualityNumber.MapToString(task.Qn),
                     });
                 });
             }
@@ -539,7 +548,14 @@ namespace BililiveRecorder.Core
                     return;
                 }
 
-                var targetPath = Path.ChangeExtension(flvFullPath, "cover" + Path.GetExtension(coverUrl));
+                // 去掉 URL 的 query/fragment 后再取扩展名，否则 "x.jpg?ts=123"
+                // 会取到 ".jpg?ts=123" 整段，拼出带非法字符的文件名导致保存必失败
+                var coverUrlPath = coverUrl;
+                var cutIndex = coverUrlPath.IndexOfAny(new[] { '?', '#' });
+                if (cutIndex >= 0)
+                    coverUrlPath = coverUrlPath[..cutIndex];
+
+                var targetPath = Path.ChangeExtension(flvFullPath, "cover" + Path.GetExtension(coverUrlPath));
 
                 var stream = await coverDownloadHttpClient.GetStreamAsync(coverUrl).ConfigureAwait(false);
                 using var file = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None);
@@ -783,6 +799,15 @@ namespace BililiveRecorder.Core
                 if (disposing)
                 {
                     // dispose managed state (managed objects)
+
+                    // 必须先停掉检查 timer：激活中的 System.Timers.Timer 会被系统
+                    // timer 队列根引用，导致被删除的房间对象永远无法 GC
+                    this.timer.Stop();
+                    this.timer.Dispose();
+
+                    this.PropertyChanged -= this.Room_PropertyChanged;
+                    this.RoomConfig.PropertyChanged -= this.RoomConfig_PropertyChanged;
+
                     this.cts.Cancel();
                     this.cts.Dispose();
                     this.recordTask?.RequestStop();

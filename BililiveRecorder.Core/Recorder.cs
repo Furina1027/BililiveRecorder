@@ -200,8 +200,14 @@ namespace BililiveRecorder.Core
                     // dispose managed state (managed objects)
                     this.logger.Debug("Dispose called");
                     this.SaveConfig();
-                    foreach (var room in this.roomCollection)
-                        room.Dispose();
+
+                    // 与 RemoveRoom 并发时加锁遍历，Dispose 本身幂等（房间内有 disposedValue 保护）
+                    lock (this.lockObject)
+                    {
+                        foreach (var room in this.roomCollection)
+                            room.Dispose();
+                        this.roomCollection.Clear();
+                    }
                 }
 
                 // free unmanaged resources (unmanaged objects) and override finalizer

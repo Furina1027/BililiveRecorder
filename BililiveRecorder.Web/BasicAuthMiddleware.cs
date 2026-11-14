@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,7 +46,7 @@ namespace BililiveRecorder.Web
                 return this.ResponseWith401Async(context);
             }
 
-            if (credential.EncoededValue.Equals(requestCredential, StringComparison.Ordinal))
+            if (CredentialEqualsFixedTime(credential.EncoededValue, requestCredential))
             {
                 return this.next(context);
             }
@@ -52,6 +54,24 @@ namespace BililiveRecorder.Web
             {
                 return this.ResponseWith401Async(context);
             }
+        }
+
+        /// <summary>
+        /// 常量时间比较凭据，避免通过字符串比较的耗时差异逐字节猜测密码。
+        /// </summary>
+        private static bool CredentialEqualsFixedTime(string expected, string actual)
+        {
+            var expectedBytes = Encoding.UTF8.GetBytes(expected);
+            var actualBytes = Encoding.UTF8.GetBytes(actual);
+
+            if (expectedBytes.Length != actualBytes.Length)
+            {
+                // 长度不同时也要做一次等长比较，避免通过失败耗时泄露长度信息
+                CryptographicOperations.FixedTimeEquals(expectedBytes, expectedBytes);
+                return false;
+            }
+
+            return CryptographicOperations.FixedTimeEquals(expectedBytes, actualBytes);
         }
 
         private async Task ResponseWith401Async(HttpContext context)

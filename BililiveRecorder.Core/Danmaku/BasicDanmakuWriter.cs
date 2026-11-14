@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -154,7 +155,7 @@ namespace BililiveRecorder.Core.Danmaku
                         {
                             await this.xmlWriter.WriteStartElementAsync(null, "sc", null).ConfigureAwait(false);
                             var ts = Math.Max(this.dmTime.Elapsed.TotalSeconds, 0d);
-                            await this.xmlWriter.WriteAttributeStringAsync(null, "ts", null, ts.ToString("F3")).ConfigureAwait(false);
+                            await this.xmlWriter.WriteAttributeStringAsync(null, "ts", null, ts.ToString("F3", CultureInfo.InvariantCulture)).ConfigureAwait(false);
                             await this.xmlWriter.WriteAttributeStringAsync(null, "user", null, RemoveInvalidXMLChars(danmakuModel.UserName)).ConfigureAwait(false);
                             await this.xmlWriter.WriteAttributeStringAsync(null, "uid", null, danmakuModel.UserID.ToString()).ConfigureAwait(false);
                             await this.xmlWriter.WriteAttributeStringAsync(null, "price", null, danmakuModel.Price.ToString()).ConfigureAwait(false);
@@ -188,7 +189,7 @@ namespace BililiveRecorder.Core.Danmaku
                         {
                             await this.xmlWriter.WriteStartElementAsync(null, "guard", null).ConfigureAwait(false);
                             var ts = Math.Max(this.dmTime.Elapsed.TotalSeconds, 0d);
-                            await this.xmlWriter.WriteAttributeStringAsync(null, "ts", null, ts.ToString("F3")).ConfigureAwait(false);
+                            await this.xmlWriter.WriteAttributeStringAsync(null, "ts", null, ts.ToString("F3", CultureInfo.InvariantCulture)).ConfigureAwait(false);
                             await this.xmlWriter.WriteAttributeStringAsync(null, "user", null, RemoveInvalidXMLChars(danmakuModel.UserName)).ConfigureAwait(false);
                             await this.xmlWriter.WriteAttributeStringAsync(null, "uid", null, danmakuModel.UserID.ToString()).ConfigureAwait(false);
                             await this.xmlWriter.WriteAttributeStringAsync(null, "level", null, danmakuModel.UserGuardLevel.ToString()).ConfigureAwait(false); ;
@@ -223,7 +224,7 @@ namespace BililiveRecorder.Core.Danmaku
         private static async Task WriteGiftAsync(XmlWriter writer, double ts, DanmakuModel danmakuModel, string? giftName, int giftCount, string? raw)
         {
             await writer.WriteStartElementAsync(null, "gift", null).ConfigureAwait(false);
-            await writer.WriteAttributeStringAsync(null, "ts", null, ts.ToString("F3")).ConfigureAwait(false);
+            await writer.WriteAttributeStringAsync(null, "ts", null, ts.ToString("F3", CultureInfo.InvariantCulture)).ConfigureAwait(false);
             await writer.WriteAttributeStringAsync(null, "user", null, RemoveInvalidXMLChars(danmakuModel.UserName)).ConfigureAwait(false);
             await writer.WriteAttributeStringAsync(null, "uid", null, danmakuModel.UserID.ToString()).ConfigureAwait(false);
             await writer.WriteAttributeStringAsync(null, "giftname", null, RemoveInvalidXMLChars(giftName)).ConfigureAwait(false);

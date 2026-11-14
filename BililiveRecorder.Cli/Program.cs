@@ -472,25 +472,39 @@ namespace BililiveRecorder.Cli
 
         private static (string schema, string host, int port) ParseBindArgument(string bind, ILogger logger)
         {
-            if (int.TryParse(bind, out var value))
+            if (int.TryParse(bind, out var value) && value is > 0 and <= 65535)
             {
                 // 只传入了一个端口号
                 return ("http", "localhost", value);
             }
 
-            var match = Regex.Match(bind, @"^(?<schema>https?):\/\/(?<host>[^\:\/\?\#]+)(?:\:(?<port>\d+))?(?:\/.*)?$", RegexOptions.Singleline | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(5));
+            // host 部分兼容 IPv6 字面量（如 http://[::1]:2356）。
+            // 之前的正则会在第一个 ':' 处截断，导致 IPv6 地址解析失败，
+            // 进而走到 ListenAnyIP 把服务静默暴露到所有网卡
+            var match = Regex.Match(bind, @"^(?<schema>https?)://(?<host>\[[0-9A-Fa-f:.]+\]|[^\:/?#\[\]]+)(?::(?<port>\d{1,5}))?(?:/.*)?$", RegexOptions.Singleline | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(5));
             if (match.Success)
             {
-                var schema = match.Groups["schema"].Value.ToLower();
+                var schema = match.Groups["schema"].Value.ToLowerInvariant();
                 var host = match.Groups["host"].Value;
-                var port = match.Groups["port"].Success ? int.Parse(match.Groups["port"].Value) : 2356;
-                return (schema, host, port);
+
+                // 去掉 IPv6 字面量的方括号，交给 IPAddress.TryParse 处理
+                if (host.StartsWith('[') && host.EndsWith(']'))
+                    host = host[1..^1];
+
+                if (match.Groups["port"].Success)
+                {
+                    if (int.TryParse(match.Groups["port"].Value, out var port) && port is > 0 and <= 65535)
+                        return (schema, host, port);
+
+                    logger.Warning("侦听参数的端口无效，使用默认端口 2356");
+                    return (schema, host, 2356);
+                }
+
+                return (schema, host, 2356);
             }
-            else
-            {
-                logger.Warning("侦听参数解析失败，使用默认值 {DefaultBindLocation}", "http://localhost:2356");
-                return ("http", "localhost", 2356);
-            }
+
+            logger.Warning("侦听参数解析失败，使用默认值 {DefaultBindLocation}", "http://localhost:2356");
+            return ("http", "localhost", 2356);
         }
 
         private static IServiceProvider BuildServiceProvider(ConfigV3 config, ILogger logger) => new ServiceCollection()

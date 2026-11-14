@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -325,9 +326,11 @@ namespace BililiveRecorder.ToolBox.Tool.DanmakuMerger
                     {
                         var p = element.Attribute("p");
                         var i = p.Value.IndexOf(',');
-                        var t = TimeSpan.FromSeconds(double.Parse(p.Value.Substring(0, i)));
+                        // 弹幕 XML 的时间戳固定使用小数点，必须用 InvariantCulture，
+                        // 否则在小数点为逗号的系统区域下会解析出错误数值 / 输出带逗号的时间戳
+                        var t = TimeSpan.FromSeconds(double.Parse(p.Value.Substring(0, i), CultureInfo.InvariantCulture));
                         t += offset;
-                        p.Value = t.TotalSeconds.ToString("F3") + p.Value.Substring(i);
+                        p.Value = t.TotalSeconds.ToString("F3", CultureInfo.InvariantCulture) + p.Value.Substring(i);
                         return t;
                     }
                 case "gift":
@@ -336,7 +339,7 @@ namespace BililiveRecorder.ToolBox.Tool.DanmakuMerger
                     {
                         var ts = TimeSpan.FromSeconds((double)element.Attribute("ts"));
                         ts += offset;
-                        element.SetAttributeValue("ts", ts.TotalSeconds.ToString("F3"));
+                        element.SetAttributeValue("ts", ts.TotalSeconds.ToString("F3", CultureInfo.InvariantCulture));
                         return ts;
                     }
                 default:

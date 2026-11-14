@@ -57,32 +57,38 @@ namespace BililiveRecorder.Flv.Writer
             await this.semaphoreSlim.WaitAsync().ConfigureAwait(false);
             try
             {
-                foreach (var item in context.Actions)
+                try
                 {
-                    try
+                    foreach (var item in context.Actions)
                     {
-                        await this.WriteSingleActionAsync(item).ConfigureAwait(false);
+                        try
+                        {
+                            await this.WriteSingleActionAsync(item).ConfigureAwait(false);
+                        }
+                        catch (Exception)
+                        {
+                            this.state = WriterState.Invalid;
+                            throw;
+                        }
                     }
-                    catch (Exception)
-                    {
-                        this.state = WriterState.Invalid;
-                        throw;
-                    }
+                }
+                finally
+                {
+                    this.semaphoreSlim.Release();
                 }
             }
             finally
             {
-                this.semaphoreSlim.Release();
+                // Dispose tags：无论写入是否成功都要释放，否则写入中途抛异常时
+                // 本 context 剩余标签的池化内存流不会被归还
+                foreach (var action in context.Actions)
+                    if (action is PipelineDataAction dataAction)
+                        foreach (var tag in dataAction.Tags)
+                            tag.BinaryData?.Dispose();
             }
 
             var bytesWritten = this.bytesWrittenByCurrentWriteCall;
             this.bytesWrittenByCurrentWriteCall = 0;
-
-            // Dispose tags
-            foreach (var action in context.Actions)
-                if (action is PipelineDataAction dataAction)
-                    foreach (var tag in dataAction.Tags)
-                        tag.BinaryData?.Dispose();
 
             return bytesWritten;
         }

@@ -122,6 +122,11 @@ namespace BililiveRecorder.Flv.Grouping
                     // dispose managed state (managed objects)
                     if (!this.leaveOpen)
                         this.TagReader.Dispose();
+
+                    // 中断时留在分组缓冲里的残留 tag 也要释放数据流
+                    var leftover = this.leftoverTag;
+                    this.leftoverTag = null;
+                    leftover?.BinaryData?.Dispose();
                 }
 
                 // free unmanaged resources (unmanaged objects) and override finalizer

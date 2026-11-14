@@ -49,6 +49,12 @@ namespace BililiveRecorder.Flv.Parser
 
         public void Dispose()
         {
+            // 尚未被 ReadTagAsync 取走的 peek 标签也要释放数据流，避免池化内存流泄漏
+            var pendingTag = this.peekTag;
+            this.peekTag = null;
+            this.peek = false;
+            pendingTag?.BinaryData?.Dispose();
+
             if (!this.leaveOpen)
                 this.Reader.Complete();
         }
