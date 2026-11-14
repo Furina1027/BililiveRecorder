@@ -466,6 +466,24 @@
             }
           }
         },
+        "RecordFolderSizeLimit": {
+          "description": "录制文件夹大小上限 单位MB 超出后自动删除最早的录制文件，0为不限制\n默认: 0",
+          "markdownDescription": "录制文件夹大小上限 单位MB 超出后自动删除最早的录制文件，0为不限制  \n默认: `0 `\n\n",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "HasValue": {
+              "type": "boolean",
+              "default": true
+            },
+            "Value": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295,
+              "default": 0
+            }
+          }
+        },
         "RecordDanmaku": {
           "description": "弹幕录制\n默认: false",
           "markdownDescription": "弹幕录制  \n默认: `false `\n\n",
@@ -740,6 +758,24 @@
             "Value": {
               "type": "boolean",
               "default": false
+            }
+          }
+        },
+        "RecordFolderSizeLimit": {
+          "description": "录制文件夹大小上限 单位MB 超出后自动删除最早的录制文件，0为不限制\n默认: 0",
+          "markdownDescription": "录制文件夹大小上限 单位MB 超出后自动删除最早的录制文件，0为不限制  \n默认: `0 `\n\n",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "HasValue": {
+              "type": "boolean",
+              "default": true
+            },
+            "Value": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295,
+              "default": 0
             }
           }
         },

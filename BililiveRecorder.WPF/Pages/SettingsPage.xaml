@@ -87,6 +87,17 @@
             <GroupBox Header="直播封面">
                 <ui:ToggleSwitch IsOn="{Binding SaveStreamCover}" OnContent="录制时同时保存直播封面" OffContent="录制时同时保存直播封面"/>
             </GroupBox>
+            <GroupBox Header="录制文件夹大小限制">
+                <StackPanel MaxWidth="500" HorizontalAlignment="Left">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                        <TextBlock Text="每个主播的录制文件夹最大"/>
+                        <TextBox Margin="5,0" Width="100" Text="{Binding RecordFolderSizeLimit,Delay=500}" ui:TextBoxHelper.IsDeleteButtonVisible="False"/>
+                        <TextBlock Text="MB，超出后自动删除最早的录制文件"/>
+                    </StackPanel>
+                    <TextBlock FontSize="12"
+                               Text="填 0 表示不限制。每次开始录制新的视频文件前检查一次，只删除视频文件，弹幕文件不受影响。"/>
+                </StackPanel>
+            </GroupBox>
             <GroupBox Header="{l:Loc Settings_FileName_Title}">
                 <StackPanel MaxWidth="500" HorizontalAlignment="Left">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">

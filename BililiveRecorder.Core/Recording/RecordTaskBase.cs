@@ -211,7 +211,45 @@ namespace BililiveRecorder.Core.Recording
                 Json = this.room.RawBilibiliApiJsonData,
             });
 
+            this.EnforceFolderSizeLimit(output.RelativePath);
+
             return (output.FullPath!, output.RelativePath);
+        }
+
+        /// <summary>
+        /// 每次创建新的录制文件前，检查录制文件所在文件夹的总大小，
+        /// 超过设置的上限时自动删除最早的录制文件。
+        /// </summary>
+        private void EnforceFolderSizeLimit(string relativePath)
+        {
+            try
+            {
+                var limit = this.room.RoomConfig.RecordFolderSizeLimit;
+                if (limit == 0)
+                    return;
+
+                var workDirectory = this.room.RoomConfig.WorkDirectory;
+                if (string.IsNullOrEmpty(workDirectory))
+                    return;
+
+                // 每个主播的录制文件位于工作目录下的独立子文件夹（由文件名模板的第一级目录决定）
+                var separatorIndex = relativePath.IndexOfAny(new[] { '/', '\\' });
+                var roomFolder = separatorIndex > 0
+                    ? Path.Combine(workDirectory, relativePath.Substring(0, separatorIndex))
+                    : workDirectory;
+
+                var deleted = FolderSizeLimiter.EnforceLimit(
+                    roomFolder,
+                    (long)limit * 1024 * 1024,
+                    this.logger);
+
+                if (deleted > 0)
+                    this.logger.Information("为控制录制文件夹大小，共删除了 {Count} 个旧录制文件", deleted);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Warning(ex, "检查录制文件夹大小限制时出错，将继续录制");
+            }
         }
 
         #region Api Requests

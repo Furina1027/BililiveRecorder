@@ -45,6 +45,13 @@ export const data: Array<ConfigEntry> = [
         default: false
     },
     {
+        id: "RecordFolderSizeLimit",
+        name: "录制文件夹大小上限 单位MB 超出后自动删除最早的录制文件，0为不限制",
+        type: "uint",
+        configType: "room",
+        default: 0
+    },
+    {
         id: "RecordDanmaku",
         name: "弹幕录制",
         type: "bool",

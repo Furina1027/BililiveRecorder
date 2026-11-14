@@ -62,6 +62,14 @@ namespace BililiveRecorder.Core.Config.V3
         public Optional<bool> OptionalCuttingByTitle { get => this.GetPropertyValueOptional<bool>(nameof(this.CuttingByTitle)); set => this.SetPropertyValueOptional(value, nameof(this.CuttingByTitle)); }
 
         /// <summary>
+        /// 录制文件夹大小上限 单位MB 超出后自动删除最早的录制文件，0为不限制
+        /// </summary>
+        public uint RecordFolderSizeLimit { get => this.GetPropertyValue<uint>(); set => this.SetPropertyValue(value); }
+        public bool HasRecordFolderSizeLimit { get => this.GetPropertyHasValue(nameof(this.RecordFolderSizeLimit)); set => this.SetPropertyHasValue<uint>(value, nameof(this.RecordFolderSizeLimit)); }
+        [JsonProperty(nameof(RecordFolderSizeLimit)), EditorBrowsable(EditorBrowsableState.Never)]
+        public Optional<uint> OptionalRecordFolderSizeLimit { get => this.GetPropertyValueOptional<uint>(nameof(this.RecordFolderSizeLimit)); set => this.SetPropertyValueOptional(value, nameof(this.RecordFolderSizeLimit)); }
+
+        /// <summary>
         /// 弹幕录制
         /// </summary>
         public bool RecordDanmaku { get => this.GetPropertyValue<bool>(); set => this.SetPropertyValue(value); }
@@ -287,6 +295,14 @@ namespace BililiveRecorder.Core.Config.V3
         public bool HasCuttingByTitle { get => this.GetPropertyHasValue(nameof(this.CuttingByTitle)); set => this.SetPropertyHasValue<bool>(value, nameof(this.CuttingByTitle)); }
         [JsonProperty(nameof(CuttingByTitle)), EditorBrowsable(EditorBrowsableState.Never)]
         public Optional<bool> OptionalCuttingByTitle { get => this.GetPropertyValueOptional<bool>(nameof(this.CuttingByTitle)); set => this.SetPropertyValueOptional(value, nameof(this.CuttingByTitle)); }
+
+        /// <summary>
+        /// 录制文件夹大小上限 单位MB 超出后自动删除最早的录制文件，0为不限制
+        /// </summary>
+        public uint RecordFolderSizeLimit { get => this.GetPropertyValue<uint>(); set => this.SetPropertyValue(value); }
+        public bool HasRecordFolderSizeLimit { get => this.GetPropertyHasValue(nameof(this.RecordFolderSizeLimit)); set => this.SetPropertyHasValue<uint>(value, nameof(this.RecordFolderSizeLimit)); }
+        [JsonProperty(nameof(RecordFolderSizeLimit)), EditorBrowsable(EditorBrowsableState.Never)]
+        public Optional<uint> OptionalRecordFolderSizeLimit { get => this.GetPropertyValueOptional<uint>(nameof(this.RecordFolderSizeLimit)); set => this.SetPropertyValueOptional(value, nameof(this.RecordFolderSizeLimit)); }
 
         /// <summary>
         /// 弹幕录制
@@ -558,6 +574,8 @@ namespace BililiveRecorder.Core.Config.V3
         public uint CuttingNumber => 100;
 
         public bool CuttingByTitle => false;
+
+        public uint RecordFolderSizeLimit => 0;
 
         public bool RecordDanmaku => false;
 
