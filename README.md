@@ -3,105 +3,47 @@
 
 # mikufans录播姬
 
-[![Build and Test](https://github.com/BililiveRecorder/BililiveRecorder/actions/workflows/build.yml/badge.svg?branch=dev)](https://github.com/BililiveRecorder/BililiveRecorder/actions/workflows/build.yml)
-[![Version](https://img.shields.io/github/tag/Bililive/BililiveRecorder.svg?label=Version)](#)
-[![License](https://img.shields.io/github/license/Bililive/BililiveRecorder.svg)](#)
-[![Crowdin](https://badges.crowdin.net/bililiverecorder/localized.svg)](https://crowdin.com/project/bililiverecorder)
-
 </div>
 
-[简体中文 README | Simplified Chinese](README_CN.md)
+> 本仓库是 [BililiveRecorder/BililiveRecorder](https://github.com/BililiveRecorder/BililiveRecorder) 的本地分支（基于上游 v2.20.0 / `a2c5b39`），当前版本 **v3.0.0**。
 
-GitHub is a global platform, and theoretically, everyone should use English. But since this project is mostly meant for Chinese user and rely on a Chinese website [BiliBili](https://live.bilibili.com) ([_wikipedia_](https://en.wikipedia.org/wiki/Bilibili)), most things related to this project like code comments, documentations and other related repositories are written in Chinese. This README file will always use English so people like _you_ can understand what is this, and perhaps make some use out of it.
+## 相对上游的改动（v3.0.0）
 
-Software UI is available in
+- **全项目统一 net10.0**：WPF 从 .NET Framework 4.7.2 老式工程迁移为 SDK 风格 `net10.0-windows`，与 Cli/Web 同走 `dotnet` 工具链；移除 net472 条件编译与全部 polyfill 包
+- **新增：录制文件夹容量限制**（房间级/全局，GB 口径）——文件夹总量超限后自动从最早的录像开始删除，弹幕与封面永不删除，正在录制的文件不受影响；每次新建录制文件时在后台线程检查，不阻塞录制管线
+- **修复一批**：弹幕握手失败后的假连接状态、房间删除后 timer 泄漏、录制事件 NRE 竞态、封面 URL 带参数保存失败、DNS 过滤空数组越界、直播流重定向无限循环、弹幕 XML 时间戳在逗号小数区域损坏、Web BasicAuth 时序侧信道、CLI IPv6 绑定、单实例 Mutex 遗弃处理等
+- **移除**：公告页与检查更新（Squirrel 更新循环）、除简体中文外的全部语言资源、Sentry 上报保留但不再弹更新
+- **单实例**：.NET Remoting IPC（已从现代 .NET 移除）重写为 Mutex + NamedPipe
+- 分段与容量限制的单位统一为 **GB**（GiB 口径，与资源管理器显示一致）
 
-- 简体中文 (Source and default)
-- 繁体中文
-- 日本語
-- English
+## 构建
 
-## Installation
-
-See [rec.danmuji.org](https://rec.danmuji.org) (in Chinese) for Windows installer with auto update.
-
-Alernatively, you can download from [releases](https://github.com/BililiveRecorder/BililiveRecorder/releases) page.  
-The zip file available at the releases page does not have auto update enabled. You are welcome to watch this repository for new releases. (Click the "Watch" dropdown menu, then "Custom", and check the "Releases" checkbox).
-
-Binary files of the command line version are available for Linux, macOS, and Windows at [releases](https://github.com/BililiveRecorder/BililiveRecorder/releases).
-
-Docker images can be pulled from [Docker Hub `bililive/recorder`](https://hub.docker.com/r/bililive/recorder) or [`ghcr.io/bililiverecorder/bililiverecorder`](https://github.com/bililiverecorder/BililiveRecorder/pkgs/container/bililiverecorder).
-
-See [rec.danmuji.org/install/versions](https://rec.danmuji.org/install/versions/) for step by step installation guides (in Chinese).
-
-## Feature
-
-- Easy to use
-- Start recording automatically when stream starts
-- Record multiple stream at same time
-- Fix broken recording caused by broken bilibili stream server
-- Toolbox mode to fix broken bilibili stream recording recorded by other software<sup>1</sup>
-- Pure C#, no native dependency like ffmpeg<sup>2</sup>
-- Open source!
-
-<sup>1</sup>: Only unprocessed flv file downloaded directly from stream servers can be fixed. If the file is downloaded or processed by FFmpeg it no longer can be fixed, FFmpeg will fvck up the already broken recording even further.  
-<sup>2</sup>: A minimal version of FFmpeg is bundled with the desktop edition of BililiveRecorder for the remux feature in toolbox.
-
-## Versioning
-
-This project is following Semantic Versioning since version 2.0.0.
-
-Please note this does not include the public .NET API of `BililiveRecorder.Flv`, or any project within this repository for that matter. They are considered as internal implementation thus could have breaking changes in any releases.
-
-## Building from source
-
-Note: full git history is required for version generation to work.
-
-WPF version:
+需要 [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0)（global.json 已固定 10.0.100/latestMajor）与完整 git 历史（版本号由 GitVersion 生成）。
 
 ```powershell
-cd BililiveRecorder.WPF
-msbuild -t:restore
-msbuild
+dotnet publish BililiveRecorder.WPF/BililiveRecorder.WPF.csproj -c Release -o <输出目录>
 ```
 
-Command line version:
+一条命令同时构建 Core/Flv/ToolBox/Web 并产出 WPF 桌面版。版本号规则：打 `vX.Y.Z` tag 即为该版本，之后每个提交自动递增 patch（Mainline 模式，见 `GitVersion.yml`）。
 
-```sh
-# Build WebUI, optional
-git submodule update --init --recursive
-./webui/build.sh
-# For building on Windows:
-# ./webui/build.ps1
+## 部署与配置
 
-dotnet build BililiveRecorder.Cli
-```
+- 发布产物为绿色版文件夹，直接运行 `BililiveRecorder.WPF.exe`
+- 配置与房间列表保存在**工作目录**的 `config.json`（程序根的 `path.json` 记录工作目录指针），备份工作目录 = 备份一切
+- 录像默认输出到工作目录下按主播分的子文件夹，受容量限制循环管理
 
-## Project structure
+## 功能
 
-Project | Target |
-:--- |:--- |
-BililiveRecorder.Flv | .NET Standard 2.0 |
-BililiveRecorder.Core | .NET 6<br>.NET Framework 4.7.2 |
-BililiveRecorder.Toolbox | .NET Standard 2.0 |
-BililiveRecorder.WPF | .NET Framework 4.7.2 |
-BililiveRecorder.Web | .NET 6 |
-BililiveRecorder.Cli | .NET 6 |
+- 主播开播后自动开始录制（弹幕长连接 `PREPARING` 信号，秒级响应）
+- 同时录制多个直播间，自动修复 mikufans 直播服务器导致的各种问题
+- 工具箱模式，用于修复旧版录播姬或其他软件录的视频文件<sup>1</sup>
+- 纯 C# 实现，无 ffmpeg 等 native 依赖<sup>2</sup>
 
-```mermaid
-graph BT
-    toolbox(BililiveRecorder.Toolbox) --> flv(BililiveRecorder.Flv)
-    core(BililiveRecorder.Core) --> flv
-    wpf(BililiveRecorder.WPF) --> core
-    wpf --> toolbox
-    cli(BililiveRecorder.Cli) --> toolbox
-    cli ---> core
-    web(BililiveRecorder.Web) --> core
-    cli --> web
-```
+<sup>1</sup>：仅限未经处理的直接从直播服务器下载的原始 FLV 文件；FFmpeg 录制或处理过的文件无法修复。  
+<sup>2</sup>：桌面版内含 mini 版 FFmpeg，用于工具箱的转封装功能。
 
-## Reference & Acknowledgements
+## 上游资源
 
-- [Adobe Flash Video File Format Specification 10.1.2.01.pdf](https://www.adobe.com/content/dam/acom/en/devnet/flv/video_file_format_spec_v10_1.pdf)
-- [coreyauger/flv-streamer-2-file](https://github.com/coreyauger/flv-streamer-2-file) Used as a reference in the early stages of development
-- [zyzsdy/biliroku](https://github.com/zyzsdy/biliroku) - (probably) first BiliBili stream recording tool.
+- 上游仓库：[BililiveRecorder/BililiveRecorder](https://github.com/BililiveRecorder/BililiveRecorder)（dev 分支）
+- 安装使用教程（上游）：[rec.danmuji.org](https://rec.danmuji.org)
+- 许可证见 [LICENSE](LICENSE)
