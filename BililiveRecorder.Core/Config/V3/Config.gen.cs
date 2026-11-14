@@ -62,7 +62,7 @@ namespace BililiveRecorder.Core.Config.V3
         public Optional<bool> OptionalCuttingByTitle { get => this.GetPropertyValueOptional<bool>(nameof(this.CuttingByTitle)); set => this.SetPropertyValueOptional(value, nameof(this.CuttingByTitle)); }
 
         /// <summary>
-        /// 录制文件夹大小上限 单位MiB 超出后自动删除最早的录制文件，0为不限制
+        /// 录制文件夹大小上限 单位GB 超出后自动删除最早的录制文件，0为不限制
         /// </summary>
         public uint RecordFolderSizeLimit { get => this.GetPropertyValue<uint>(); set => this.SetPropertyValue(value); }
         public bool HasRecordFolderSizeLimit { get => this.GetPropertyHasValue(nameof(this.RecordFolderSizeLimit)); set => this.SetPropertyHasValue<uint>(value, nameof(this.RecordFolderSizeLimit)); }
@@ -297,7 +297,7 @@ namespace BililiveRecorder.Core.Config.V3
         public Optional<bool> OptionalCuttingByTitle { get => this.GetPropertyValueOptional<bool>(nameof(this.CuttingByTitle)); set => this.SetPropertyValueOptional(value, nameof(this.CuttingByTitle)); }
 
         /// <summary>
-        /// 录制文件夹大小上限 单位MiB 超出后自动删除最早的录制文件，0为不限制
+        /// 录制文件夹大小上限 单位GB 超出后自动删除最早的录制文件，0为不限制
         /// </summary>
         public uint RecordFolderSizeLimit { get => this.GetPropertyValue<uint>(); set => this.SetPropertyValue(value); }
         public bool HasRecordFolderSizeLimit { get => this.GetPropertyHasValue(nameof(this.RecordFolderSizeLimit)); set => this.SetPropertyHasValue<uint>(value, nameof(this.RecordFolderSizeLimit)); }

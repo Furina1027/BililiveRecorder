@@ -247,7 +247,7 @@ namespace BililiveRecorder.Core.Recording
                 // 检查在后台执行，不阻塞建文件路径；删除动作与汇总日志由 FolderSizeLimiter 自己输出
                 FolderSizeLimiter.EnforceLimit(
                     roomFolder,
-                    (long)limit * 1024 * 1024,
+                    (long)limit * 1024 * 1024 * 1024,
                     this.logger,
                     searchOption);
             }

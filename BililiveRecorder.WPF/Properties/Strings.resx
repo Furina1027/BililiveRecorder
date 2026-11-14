@@ -493,7 +493,7 @@
     <value>保存为一个文件</value>
   </data>
   <data name="Settings_Splitting_TextBox_SizeUnit" xml:space="preserve">
-    <value>MiB</value>
+    <value>GB</value>
   </data>
   <data name="Settings_Splitting_TextBox_TimeUnit" xml:space="preserve">
     <value>分</value>

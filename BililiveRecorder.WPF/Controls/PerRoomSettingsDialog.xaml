@@ -114,7 +114,7 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock VerticalAlignment="Center" Text="文件夹最大"/>
                             <TextBox Margin="5,0" Width="100" Text="{Binding RecordFolderSizeLimit,Delay=500}" ui:TextBoxHelper.IsDeleteButtonVisible="False"/>
-                            <TextBlock VerticalAlignment="Center" Text="MiB，0 为不限制"/>
+                            <TextBlock VerticalAlignment="Center" Text="GB，0 为不限制"/>
                         </StackPanel>
                     </local:SettingWithDefault>
                 </GroupBox>

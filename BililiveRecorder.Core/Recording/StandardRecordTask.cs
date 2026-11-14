@@ -282,7 +282,7 @@ namespace BililiveRecorder.Core.Recording
                         this.splitFileRule.SetSplitBeforeFlag();
                     break;
                 case CuttingMode.BySize:
-                    if ((e.CurrentFileSize + (e.OutputVideoBytes * 1.1) + e.OutputAudioBytes) / (1024d * 1024d) > this.room.RoomConfig.CuttingNumber)
+                    if ((e.CurrentFileSize + (e.OutputVideoBytes * 1.1) + e.OutputAudioBytes) / (1024d * 1024d * 1024d) > this.room.RoomConfig.CuttingNumber)
                         this.splitFileRule.SetSplitBeforeFlag();
                     break;
             }
